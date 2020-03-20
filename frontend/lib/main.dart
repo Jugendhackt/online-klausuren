@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     );
     channel.stream.listen(onData);
 
-/*     send('task', {
+  /*   send('task', {
       'task': {
         'id': '3f1758ab-368f-475a-91b1-e9d431fb67d0',
         'type': "CHOICES",
@@ -76,6 +76,7 @@ class _HomePageState extends State<HomePage> {
       deadline = DateTime.fromMillisecondsSinceEpoch(data['deadline'] * 1000);
 
       _selectedChoice = null;
+      _submitted = false;
 
       if (mounted) setState(() {});
     }
@@ -124,18 +125,28 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       children: <Widget>[
                         StreamBuilder(
-                          stream: Stream.periodic(
-                            Duration(seconds: 1),
-                          ),
-                          builder: (context, _) => Text(
-                            _printDuration(
-                                  deadline.difference(
-                                    DateTime.now(),
-                                  ),
-                                ) +
-                                ' verbleibend',
-                          ),
-                        ),
+                            stream: Stream.periodic(
+                              Duration(milliseconds: 200),
+                            ),
+                            builder: (context, _) {
+                              if (deadline
+                                      .difference(
+                                        DateTime.now(),
+                                      )
+                                      .inMilliseconds <
+                                  0) {
+                                if (!_submitted) sendSubmission();
+                              }
+
+                              return Text(
+                                _printDuration(
+                                      deadline.difference(
+                                        DateTime.now(),
+                                      ),
+                                    ) +
+                                    ' verbleibend',
+                              );
+                            }),
                         Spacer(),
                         Text(
                           _printDuration(
@@ -163,14 +174,11 @@ class _HomePageState extends State<HomePage> {
                         child: RaisedButton(
                           color: Colors.yellow,
                           child: Text('Auswahl bestätigen und abschicken'),
-                          onPressed: () {
-                            send(
-                              'submission',
-                              Submission(
-                                  taskId: currentTask.id,
-                                  value: _selectedChoice),
-                            );
-                          },
+                          onPressed: _submitted
+                              ? null
+                              : () {
+                                  sendSubmission();
+                                },
                         ),
                       ),
                   ],
@@ -178,7 +186,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  sendSubmission() {
+    _submitted = true;
+    if (currentTask is MultipleChoiceTask) {
+      if (_selectedChoice == null) {
+        _selectedChoice =
+            (currentTask as MultipleChoiceTask).choices.keys.first;
+      }
+      send(
+        'submission',
+        Submission(taskId: currentTask.id, value: _selectedChoice),
+      );
+    }
+
+    if (mounted) setState(() {});
+  }
+
   String _selectedChoice;
+  bool _submitted = false;
 
   List<Widget> _buildChoices() {
     var list = <Widget>[];
