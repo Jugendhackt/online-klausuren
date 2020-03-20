@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
   runApp(
@@ -16,6 +20,37 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String bearerToken;
+  WebSocketChannel channel;
+
+  // Stellt die Verbindung zum Backend her
+  connect() {
+    if (channel != null) return;
+
+    channel = IOWebSocketChannel.connect(
+      'ws://echo.websocket.org',
+      headers: {
+        'Authorization': 'Bearer $bearerToken',
+      },
+    );
+    channel.stream.listen(onData);
+  }
+
+  // Erhält Daten vom Backend
+  onData(var msg) {
+    print(msg);
+  }
+
+  // Sendet Daten zum Backend
+  send(String function, var data) {
+    channel.sink.add(
+      json.encode(
+        {
+          'function': function,
+          'data': data,
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -56,6 +91,7 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               bearerToken = ctrl.text;
                             });
+                            connect();
                           },
                           child: Text('Login'),
                         ),
