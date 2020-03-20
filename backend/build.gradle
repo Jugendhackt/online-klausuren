@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'war'
+    id "org.gretty" version "3.0.1"
+}
+group 'org.jugendhackt.online-klausuren'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'javax.websocket:javax.websocket-api:1.1'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+}
+
+gretty {
+    contextPath = '/'
+}
