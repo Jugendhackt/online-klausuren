@@ -31,15 +31,15 @@ class _HomePageState extends State<HomePage> {
     if (channel != null) return;
 
     channel = HtmlWebSocketChannel.connect(
-      'ws://echo.websocket.org',
-// TODO Other authorization
+      'ws://localhost:8080/api/v1/ws',
+// TODO Other authorization [low priority]
 /*       headers: {
         'Authorization': 'Bearer $bearerToken',
       }, */
     );
     channel.stream.listen(onData);
 
-    send('task', {
+/*     send('task', {
       'task': {
         'id': '3f1758ab-368f-475a-91b1-e9d431fb67d0',
         'type': "CHOICES",
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
         },
       },
       'deadline': 1584835199,
-    });
+    }); */
   }
 
   // Erhält Daten vom Backend
