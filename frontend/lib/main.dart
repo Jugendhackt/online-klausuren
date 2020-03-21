@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
 
     var msg = json.decode(msgAsJson);
     String function = msg['function'];
-    var data = msg['data'];
+    var data = msg.containsKey('data') ? msg['data'] : null;
 
     if (function == 'task') {
       var task = data['task'];
@@ -78,6 +78,13 @@ class _HomePageState extends State<HomePage> {
 
       _selectedChoice = null;
       _submitted = false;
+
+      if (mounted) setState(() {});
+    } else if (function == 'test_finished') {
+      _selectedChoice = null;
+      _submitted = false;
+
+      _testFinished = true;
 
       if (mounted) setState(() {});
     }
@@ -98,6 +105,8 @@ class _HomePageState extends State<HomePage> {
   Task currentTask;
   DateTime deadline;
 
+  bool _testFinished = false;
+
   @override
   void initState() {
     super.initState();
@@ -111,10 +120,11 @@ class _HomePageState extends State<HomePage> {
       ),
       body: bearerToken == null
           ? _buildLoginPage()
-          : (currentTask == null
+          : ((currentTask == null || _testFinished)
               ? Center(
-                  child:
-                      Text('Dein Token: $bearerToken. Warte auf Aufgaben...'),
+                  child: Text(_testFinished
+                      ? 'Dieser Test ist jetzt beendet. Vielen Dank für deine Teilnahme!'
+                      : 'Dein Token: $bearerToken. Warte auf Aufgaben...'),
                 )
               : ListView(
                   padding: const EdgeInsets.all(8.0),
