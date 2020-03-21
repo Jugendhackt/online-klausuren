@@ -10,10 +10,10 @@ public class Task {
     public final String description;
     public final int time;
 
-    public Task(String title, String description, int time) {
+    public Task(String title, String description, int time, UUID id) {
         this.title = title;
         this.description = description;
         this.time = time;
-        this.id = UUID.randomUUID();
+        this.id = id;
     }
 }

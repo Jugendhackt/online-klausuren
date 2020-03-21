@@ -24,7 +24,7 @@ public class Test {
     }
 
     public void addStudent(Session session) {
-        Student student = new Student(session, Util.shuffle(tasks));
+        Student student = new Student(session, session.getId(), Util.shuffle(tasks));
         students.add(student);
         student.setCurrentTask(student.getTaskList()[0]);
         sendTaskToStudent(student);
@@ -43,8 +43,13 @@ public class Test {
             student.setCurrentTask(nextTask);
             sendTaskToStudent(student);
         } else {
-            WebSocket.sendMessage(session, GLOBAL_VARS.gson.toJson(new WebsocketPacket("test_finished", new JsonObject())));
+            endTest(student);
         }
+    }
+
+    private void endTest(Student student) {
+        WebSocket.sendMessage(student.getSession(), GLOBAL_VARS.gson.toJson(new WebsocketPacket("test_finished", new JsonObject())));
+        GLOBAL_VARS.database.saveStudent(this, student);
     }
 
     private void sendTaskToStudent(Student student) {

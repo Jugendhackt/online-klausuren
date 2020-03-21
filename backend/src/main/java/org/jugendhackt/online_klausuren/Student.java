@@ -17,13 +17,15 @@ public class Student {
 
     private transient Session session;
     private List<Submission> submissions;
+    private final String name;
     private transient Task currentTask;
     private transient Task[] taskList;
 
-    public Student(Session session, Task[] taskList) {
+    public Student(Session session, String name, Task[] taskList) {
         this.session = session;
         this.submissions = new ArrayList<>();
         this.taskList = taskList;
+        this.name = name;
     }
 
     public Task[] getTaskList() {
