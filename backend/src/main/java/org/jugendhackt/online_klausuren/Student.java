@@ -7,6 +7,7 @@ import org.jugendhackt.online_klausuren.tasks.Task;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.BufferedWriter;
 
 import javax.websocket.Session;
 import java.util.ArrayList;
