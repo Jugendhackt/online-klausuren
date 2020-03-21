@@ -23,8 +23,8 @@ public class Test {
         this.uuid = uuid;
     }
 
-    public void addStudent(Session session) {
-        Student student = new Student(session, session.getId(), Util.shuffle(tasks));
+    public void addStudent(Session session, String name) {
+        Student student = new Student(session, name, Util.shuffle(tasks));
         students.add(student);
         student.setCurrentTask(student.getTaskList()[0]);
         sendTaskToStudent(student);

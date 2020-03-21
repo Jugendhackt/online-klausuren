@@ -73,11 +73,14 @@ public class Database {
     }
 
 
-    public Test getTestForAuthToken(String token) {
+    public Test getTestForAuthToken(String token, String[] extras) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT test FROM auth WHERE token=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT test, name FROM auth WHERE token=?");
             statement.setString(1, token);
             ResultSet resultSet = statement.executeQuery();
+            if (extras != null && extras.length > 0) {
+                extras[0] = resultSet.getString("name");
+            }
             if(resultSet.next()) {
                 return GLOBAL_VARS.getTestByUUID(resultSet.getString("test"));
             } else {

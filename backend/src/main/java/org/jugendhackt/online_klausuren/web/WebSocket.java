@@ -19,9 +19,10 @@ public class WebSocket {
     @OnOpen
     public void onOpen(Session session) throws IOException {
         if (session.getRequestParameterMap().containsKey("token")) {
-            Test test = GLOBAL_VARS.database.getTestForAuthToken(session.getRequestParameterMap().get("token").get(0));
+            String[] options = new String[]{""};
+            Test test = GLOBAL_VARS.database.getTestForAuthToken(session.getRequestParameterMap().get("token").get(0), options);
             if (test != null) {
-                test.addStudent(session);
+                test.addStudent(session, options[0]);
             } else {
                 session.close();
             }
