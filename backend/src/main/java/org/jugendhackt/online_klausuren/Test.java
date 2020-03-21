@@ -2,6 +2,7 @@ package org.jugendhackt.online_klausuren;
 
 
 import com.google.gson.JsonObject;
+import java.time.Instant;
 import org.jugendhackt.online_klausuren.tasks.Submission;
 import org.jugendhackt.online_klausuren.tasks.Task;
 import org.jugendhackt.online_klausuren.web.WebSocket;
@@ -49,8 +50,14 @@ public class Test {
     private void sendTaskToStudent(Student student) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("task", GLOBAL_VARS.gson.toJsonTree(student.getCurrentTask()).getAsJsonObject());
-        //TODO add Deadline
+        
+        Task task = student.getCurrentTask();
+        int time = task.time;
+        long deadline = (long) time + Instant.now().getEpochSecond();
+        System.out.println("Deadline: " + deadline);
+        jsonObject.addProperty("deadline", deadline);
         WebSocket.sendMessage(student.getSession(), GLOBAL_VARS.gson.toJson(new WebsocketPacket("task", jsonObject)));
+        
     }
 
     private Task getNextTaskForStudent(Student student) {
