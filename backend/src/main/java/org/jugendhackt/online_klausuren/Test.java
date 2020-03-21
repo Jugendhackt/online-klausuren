@@ -1,31 +1,32 @@
 package org.jugendhackt.online_klausuren;
 
 
+import com.google.gson.JsonObject;
 import org.jugendhackt.online_klausuren.tasks.Submission;
 import org.jugendhackt.online_klausuren.tasks.Task;
 import org.jugendhackt.online_klausuren.web.WebSocket;
 import org.jugendhackt.online_klausuren.web.WebsocketPacket;
 
 import javax.websocket.Session;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Test {
 
     private List<Student> students;
     private Task[] tasks;
+    private final UUID uuid;
 
-    public Test(Task[] tasks) {
+    public Test(UUID uuid, Task[] tasks) {
         students = new ArrayList<>();
         this.tasks = tasks;
+        this.uuid = uuid;
     }
 
     public void addStudent(Session session) {
         Student student = new Student(session, Util.shuffle(tasks));
         students.add(student);
-
+        student.setCurrentTask(student.getTaskList()[0]);
+        sendTaskToStudent(student);
     }
 
     public void submissionSent(Session session, String submission, String taskID) {
@@ -38,10 +39,18 @@ public class Test {
         student.addSubmission(new Submission(task, submission));
         Task nextTask = getNextTaskForStudent(student);
         if (nextTask != null) {
-            WebSocket.sendMessage(session, GLOBAL_VARS.gson.toJson(new WebsocketPacket("task", GLOBAL_VARS.gson.toJsonTree(nextTask).getAsJsonObject())));
+            student.setCurrentTask(nextTask);
+            sendTaskToStudent(student);
         } else {
             //TODO Send end packet
         }
+    }
+
+    private void sendTaskToStudent(Student student) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("task", GLOBAL_VARS.gson.toJsonTree(student.getCurrentTask()).getAsJsonObject());
+        //TODO add Deadline
+        WebSocket.sendMessage(student.getSession(), GLOBAL_VARS.gson.toJson(new WebsocketPacket("task", jsonObject)));
     }
 
     private Task getNextTaskForStudent(Student student) {
@@ -61,4 +70,7 @@ public class Test {
         return null;
     }
 
+    public UUID getUuid() {
+        return uuid;
+    }
 }

@@ -17,7 +17,7 @@ public class WebSocket {
 
     @OnOpen
     public void onOpen(Session session){
-        // Do Authentication
+        // TODO Do Authentication
         if (!GLOBAL_VARS.tests.isEmpty())
             GLOBAL_VARS.tests.get(0).addStudent(session);
     }
