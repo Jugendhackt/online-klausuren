@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.jugendhackt.online_klausuren.tasks.MultipleChoiceTask;
 import org.jugendhackt.online_klausuren.tasks.Task;
+import org.jugendhackt.online_klausuren.tasks.TextTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,8 @@ public class Database {
                     UUID id = UUID.fromString(task.get("id").getAsString());
                     if (task.get("type").getAsString().equals("CHOICES")) {
                         tasks[i] = new MultipleChoiceTask(title, description, time, GLOBAL_VARS.gson.fromJson(GLOBAL_VARS.gson.toJson(task.get("choices")), new HashMap<String, String>().getClass()), id);
+                    } else if (task.get("type").getAsString().equals("TEXT")) {
+                        tasks[i] = new TextTask(title, description, time, id);
                     }
                 }
                 GLOBAL_VARS.tests.add(new Test(UUID.fromString(tests.getString("id")), tasks));
