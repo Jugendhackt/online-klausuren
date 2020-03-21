@@ -19,8 +19,8 @@ public class GLOBAL_VARS {
         return null;
     }
 
-    public static Test getTestByUUID(UUID uuid) {
-        for (Test test : tests) if (test.getUuid() == uuid) return test;
+    public static Test getTestByUUID(String uuid) {
+        for (Test test : tests) if (test.getUuid().toString().equals(uuid)) return test;
         return null;
     }
 

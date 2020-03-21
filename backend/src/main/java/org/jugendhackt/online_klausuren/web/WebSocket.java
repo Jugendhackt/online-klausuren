@@ -5,6 +5,7 @@ import org.jugendhackt.online_klausuren.GLOBAL_VARS;
 import org.jugendhackt.online_klausuren.Test;
 import org.jugendhackt.online_klausuren.tasks.Submission;
 
+import javax.websocket.CloseReason;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
@@ -16,10 +17,16 @@ import java.util.HashMap;
 public class WebSocket {
 
     @OnOpen
-    public void onOpen(Session session){
-        // TODO Do Authentication
-        if (!GLOBAL_VARS.tests.isEmpty())
-            GLOBAL_VARS.tests.get(0).addStudent(session);
+    public void onOpen(Session session) throws IOException {
+        if (session.getRequestParameterMap().containsKey("token")) {
+            Test test = GLOBAL_VARS.database.getTestForAuthToken(session.getRequestParameterMap().get("token").get(0));
+            if (test != null) {
+                test.addStudent(session);
+            } else {
+                session.close();
+            }
+        }
+
     }
 
     @OnMessage

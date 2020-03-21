@@ -6,10 +6,12 @@ import org.jugendhackt.online_klausuren.tasks.MultipleChoiceTask;
 import org.jugendhackt.online_klausuren.tasks.Task;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.UUID;
 
+@SuppressWarnings("SqlResolve")
 public class Database {
 
     private Connection connection;
@@ -72,34 +74,24 @@ public class Database {
 
 
     public Test getTestForAuthToken(String token) {
-        PreparedStatement statemet = connection.prepareStatement("SELECT test FROM auth WHERE token=?");
-        statemet.setString(1, token);
-        
-        ResultSet resultSet = statement.execute();
-        
-        if(resultSet.next() == true)
-        {
-        	resultSet.getString("test");
-        	UUID uuid = UUID.fromString(resultSet.getString("test"));
-        	
-        	Test test = getTestByUUID(uuid);
-        	
-        	return test;
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT test FROM auth WHERE token=?");
+            statement.setString(1, token);
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()) {
+                return GLOBAL_VARS.getTestByUUID(resultSet.getString("test"));
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        else
-        {
-        	return null;
-        } 
+        return null;
     }
 
-    /**
-     * Get a auth token for a new User
-     * @param name of the student
-     * @return auth token
-     */
-    public String createUser(String name, Test test) {
+
+    public void addUser(String name, UUID test) {
         //TODO
-        return null;
     }
 
 }
