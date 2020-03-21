@@ -43,7 +43,7 @@ public class Student {
         
         PrintWriter pWriter = null;
         try {
-            pWriter = new PrintWriter(new BufferedWriter(new FileWriter("Students_data.txt")));
+            pWriter = new PrintWriter(new BufferedWriter(new FileWriter("Students_data.txt", true)));
             pWriter.println(GLOBAL_VARS.gson.toJson(submission));
         } catch (IOException ioe) {
             ioe.printStackTrace();
