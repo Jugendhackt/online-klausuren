@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:online_klausuren_app/model/multiple_choice_task.dart';
 import 'package:online_klausuren_app/model/submission.dart';
@@ -31,7 +32,9 @@ class _HomePageState extends State<HomePage> {
     if (channel != null) return;
 
     channel = HtmlWebSocketChannel.connect(
-      'ws://localhost:8080/api/v1/ws?token=$bearerToken',
+      kReleaseMode
+          ? 'wss://lisky.app/api/v1/ws?token=$bearerToken'
+          : 'ws://localhost:8080/api/v1/ws?token=$bearerToken',
 // TODO Other authorization [low priority]
 /*    headers: {
         'Authorization': 'Bearer $bearerToken',
