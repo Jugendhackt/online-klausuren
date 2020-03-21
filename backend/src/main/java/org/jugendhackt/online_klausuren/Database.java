@@ -9,6 +9,8 @@ import org.jugendhackt.online_klausuren.tasks.TextTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.UUID;
@@ -114,8 +116,22 @@ public class Database {
     }
 
 
-    public void addUser(String name, UUID test) {
-        //TODO
+    public String addUser(String name, String testId) {
+        try {
+            String chrs = "0123456789abcdefghijklmnopqrstuvwxyz-_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+            String token = secureRandom.ints(25, 0, chrs.length()).mapToObj(i -> chrs.charAt(i))
+                    .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO auth (token, test, name) VALUES (?, ?, ?)");
+            statement.setString(1, token);
+            statement.setString(2, testId);
+            statement.setString(3, name);
+            statement.execute();
+            return token;
+        } catch (NoSuchAlgorithmException | SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
