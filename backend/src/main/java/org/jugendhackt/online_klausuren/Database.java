@@ -1,5 +1,7 @@
 package org.jugendhackt.online_klausuren;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.jugendhackt.online_klausuren.tasks.MultipleChoiceTask;
 import org.jugendhackt.online_klausuren.tasks.Task;
 
@@ -28,12 +30,32 @@ public class Database {
         Statement statement = connection.createStatement();
         statement.execute("CREATE TABLE IF NOT EXISTS auth (token VARCHAR(30) PRIMARY KEY, test VARCHAR(36), name VARCHAR(10))");
         statement.execute("CREATE TABLE IF NOT EXISTS taken_tests (data TEXT, test VARCHAR(36))");
-        statement.execute("CREATE TABLE IF NOT EXISTS tests (id VARCHAR(36) PRIMARY KEY, tasks TEXT)");
+        statement.execute("CREATE TABLE IF NOT EXISTS tests (id VARCHAR(36) PRIMARY KEY, tasks TEXT, archived INTEGER DEFAULT 0)");
     }
 
     private void reloadTests() {
-        //TODO LOAD! (Nicht einfach hardcoded)
-        GLOBAL_VARS.tests.add(new Test(UUID.randomUUID(), new Task[]{new MultipleChoiceTask("Warum ist die Banane krumm?", "", 60, new HashMap<String, String>(){{put("0", "Wegen der Sonne"); put("1", "Wegen den Affen");}}, UUID.randomUUID())}));
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet tests = statement.executeQuery("SELECT id, tasks FROM tests WHERE archived = 0");
+            while (tests.next()) {
+                JsonArray rawTasks = GLOBAL_VARS.gson.fromJson(tests.getString("tasks"), JsonArray.class);
+                Task[] tasks = new Task[rawTasks.size()];
+                for (int i = 0; i < rawTasks.size(); i++) {
+                    JsonObject task = rawTasks.get(i).getAsJsonObject();
+                    String title = task.get("title").getAsString();
+                    String description = task.get("description").getAsString();
+                    int time = task.get("time").getAsInt();
+                    UUID id = UUID.fromString(task.get("id").getAsString());
+                    if (task.get("type").getAsString().equals("CHOICES")) {
+                        tasks[i] = new MultipleChoiceTask(title, description, time, GLOBAL_VARS.gson.fromJson(GLOBAL_VARS.gson.toJson(task.get("choices")), new HashMap<String, String>().getClass()), id);
+                    }
+                }
+                GLOBAL_VARS.tests.add(new Test(UUID.fromString(tests.getString("id")), tasks));
+            }
+            tests.close();
+            } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void saveStudent(Test test, Student student) {
