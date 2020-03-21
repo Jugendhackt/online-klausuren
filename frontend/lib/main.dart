@@ -33,13 +33,13 @@ class _HomePageState extends State<HomePage> {
     channel = HtmlWebSocketChannel.connect(
       'ws://localhost:8080/api/v1/ws?token=$bearerToken',
 // TODO Other authorization [low priority]
-/*       headers: {
+/*    headers: {
         'Authorization': 'Bearer $bearerToken',
       }, */
     );
     channel.stream.listen(onData);
 
-/*     send('task', {
+    /*  send('task', {
       'task': {
         'id': '3f1758ab-368f-475a-91b1-e9d431fb67d0',
         'type': "CHOICES",
@@ -77,6 +77,8 @@ class _HomePageState extends State<HomePage> {
       deadline = DateTime.fromMillisecondsSinceEpoch(data['deadline'] * 1000);
 
       _selectedChoice = null;
+      _inputText = '';
+
       _submitted = false;
 
       if (mounted) setState(() {});
@@ -180,7 +182,8 @@ class _HomePageState extends State<HomePage> {
                       height: 16,
                     ),
                     if (currentTask is MultipleChoiceTask) ..._buildChoices(),
-                    if (_selectedChoice != null)
+                    if (currentTask is TextTask) _buildTextField(),
+                    if (_selectedChoice != null || currentTask is TextTask)
                       Align(
                         child: RaisedButton(
                           color: Colors.yellow,
@@ -208,10 +211,17 @@ class _HomePageState extends State<HomePage> {
         'submission',
         Submission(taskId: currentTask.id, value: _selectedChoice),
       );
+    } else if (currentTask is TextTask) {
+      send(
+        'submission',
+        Submission(taskId: currentTask.id, value: _inputText),
+      );
     }
 
     if (mounted) setState(() {});
   }
+
+  String _inputText = '';
 
   String _selectedChoice;
   bool _submitted = false;
@@ -235,6 +245,23 @@ class _HomePageState extends State<HomePage> {
     }
 
     return list;
+  }
+
+  Widget _buildTextField() {
+   // var task = currentTask as TextTask;
+
+    return TextField(
+      controller: TextEditingController(text: _inputText),
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        labelText: 'Deine Antwort',
+      ),
+      minLines: 5,
+      maxLines: 1000,
+      onChanged: (s) {
+        _inputText = s;
+      },
+    );
   }
 
   Widget _buildLoginPage() => Center(
