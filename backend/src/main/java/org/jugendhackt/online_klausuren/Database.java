@@ -72,8 +72,24 @@ public class Database {
 
 
     public Test getTestForAuthToken(String token) {
-        //TODO Load token from Database check Test UUID for that token and load with function GLOBAL_VARS getTestForUUID
-        return null;
+        PreparedStatement statemet = connection.prepareStatement("SELECT test FROM auth WHERE token=?");
+        statemet.setString(1, token);
+        
+        ResultSet resultSet = statement.execute();
+        
+        if(resultSet.next() == true)
+        {
+        	resultSet.getString("test");
+        	UUID uuid = UUID.fromString(resultSet.getString("test"));
+        	
+        	Test test = getTestByUUID(uuid);
+        	
+        	return test;
+        }
+        else
+        {
+        	return null;
+        } 
     }
 
     /**
