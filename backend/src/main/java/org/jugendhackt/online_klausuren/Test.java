@@ -43,7 +43,7 @@ public class Test {
             student.setCurrentTask(nextTask);
             sendTaskToStudent(student);
         } else {
-            //TODO Send end packet
+            WebSocket.sendMessage(session, GLOBAL_VARS.gson.toJson(new WebsocketPacket("test_finished", new jsonObjekt())));
         }
     }
 
