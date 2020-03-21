@@ -5,7 +5,7 @@ import 'package:online_klausuren_app/model/multiple_choice_task.dart';
 import 'package:online_klausuren_app/model/submission.dart';
 import 'package:online_klausuren_app/model/task.dart';
 import 'package:online_klausuren_app/model/text_task.dart';
-import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/html.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
@@ -30,15 +30,16 @@ class _HomePageState extends State<HomePage> {
   connect() {
     if (channel != null) return;
 
-    channel = IOWebSocketChannel.connect(
+    channel = HtmlWebSocketChannel.connect(
       'ws://echo.websocket.org',
-      headers: {
+// TODO Other authorization
+/*       headers: {
         'Authorization': 'Bearer $bearerToken',
-      },
+      }, */
     );
     channel.stream.listen(onData);
 
-  /*   send('task', {
+    send('task', {
       'task': {
         'id': '3f1758ab-368f-475a-91b1-e9d431fb67d0',
         'type': "CHOICES",
@@ -51,8 +52,8 @@ class _HomePageState extends State<HomePage> {
           '2': "1. Januar 1969"
         },
       },
-      'deadline': 1584725078,
-    }); */
+      'deadline': 1584835199,
+    });
   }
 
   // Erhält Daten vom Backend
