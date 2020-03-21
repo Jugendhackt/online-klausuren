@@ -44,7 +44,7 @@ public class Student {
         PrintWriter pWriter = null;
         try {
             pWriter = new PrintWriter(new BufferedWriter(new FileWriter("Students_data.txt", true)));
-            pWriter.println(GLOBAL_VARS.gson.toJson(submission));
+            pWriter.println(GLOBAL_VARS.gson.toJson(submission), session.getID());
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } finally {
