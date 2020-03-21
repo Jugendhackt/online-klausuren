@@ -167,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                                   seconds: currentTask.time,
                                 ),
                               ) +
-                              ' Minuten insgesamt',
+                              ' insgesamt',
                         ),
                       ],
                     ),
@@ -248,7 +248,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTextField() {
-   // var task = currentTask as TextTask;
+    // var task = currentTask as TextTask;
 
     return TextField(
       controller: TextEditingController(text: _inputText),
