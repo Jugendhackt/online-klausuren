@@ -3,6 +3,7 @@ package org.jugendhackt.online_klausuren;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.jugendhackt.online_klausuren.tasks.MultipleChoiceTask;
+import org.jugendhackt.online_klausuren.tasks.Submission;
 import org.jugendhackt.online_klausuren.tasks.Task;
 import org.jugendhackt.online_klausuren.tasks.TextTask;
 
@@ -89,6 +90,23 @@ public class Database {
             } else {
                 return null;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public HashMap<String, Submission[]> getSubmissionsForTest(String id) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT data FROM taken_tests WHERE test=?");
+            statement.setString(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            HashMap<String, Submission[]> submissions = new HashMap<>();
+            while (resultSet.next()) {
+                JsonObject object = GLOBAL_VARS.gson.fromJson(resultSet.getString("data"), JsonObject.class);
+                submissions.put(object.get("name").getAsString(), GLOBAL_VARS.gson.fromJson(GLOBAL_VARS.gson.toJson(object.get("submissions")), Submission[].class));
+            }
+            return submissions;
         } catch (SQLException e) {
             e.printStackTrace();
         }
