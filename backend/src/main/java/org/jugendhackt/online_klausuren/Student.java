@@ -49,7 +49,8 @@ public class Student {
             if (pWriter != null){
                 pWriter.flush();
                 pWriter.close();
-            } 
+            }
+        } 
     }
 
     public List<Submission> getSubmissions() {
