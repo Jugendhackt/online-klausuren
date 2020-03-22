@@ -105,10 +105,17 @@ public class Database {
     }
 
     public API_AUTH_ROLES getRoleForAPIAuthToken(String token) {
+        return getRoleForAPIAuthToken(token, null);
+    }
+
+    public API_AUTH_ROLES getRoleForAPIAuthToken(String token, String[] extras) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT role FROM api_auth WHERE token=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT role, name FROM api_auth WHERE token=?");
             statement.setString(1, token);
             ResultSet resultSet = statement.executeQuery();
+            if (extras != null && extras.length > 0) {
+                extras[0] = resultSet.getString("name");
+            }
             if(resultSet.next()) {
                 return API_AUTH_ROLES.valueOf(resultSet.getString("role"));
             } else {

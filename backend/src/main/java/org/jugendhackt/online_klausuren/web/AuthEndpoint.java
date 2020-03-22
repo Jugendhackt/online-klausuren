@@ -29,16 +29,24 @@ public class AuthEndpoint extends HttpServlet {
         String name = "";
         API_AUTH_ROLES role = STUDENT;
 
-        // Choose Auth Provider. They cancel the request if it is not allowed and set the name
-        switch (System.getenv("OK_AUTH_PROVIDER")) {
-            case "demo":
-                // WARNING: Demo Login is unsafe
-                name = object.get("username").getAsString();
-                role = TEACHER;
-                break;
-            default:
-                resp.getWriter().println("{\"error\": \"not implemented\"}");
+        if (req.getHeader("Authorization") != null) {
+            String[] extra = new String[]{""};
+            if (GLOBAL_VARS.database.getRoleForAPIAuthToken(req.getHeader("Authorization").replace("Bearer ", ""), extra) != null) {
+                name = extra[0];
+            }
+        } else {
+            // Choose Auth Provider. They cancel the request if it is not allowed and set the name
+            switch (System.getenv("OK_AUTH_PROVIDER")) {
+                case "demo":
+                    // WARNING: Demo Login is unsafe
+                    name = object.get("username").getAsString();
+                    role = TEACHER;
+                    break;
+                default:
+                    resp.getWriter().println("{\"error\": \"not implemented\"}");
+            }
         }
+
         String token = null;
         if (type.equals("test")) {
             token = GLOBAL_VARS.database.addTestUser(name, object.get("test").getAsString());
@@ -51,5 +59,6 @@ public class AuthEndpoint extends HttpServlet {
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.addHeader("Access-Control-Allow-Origin", "*");
+        resp.addHeader("Access-Control-Allow-Headers", "*");
     }
 }
