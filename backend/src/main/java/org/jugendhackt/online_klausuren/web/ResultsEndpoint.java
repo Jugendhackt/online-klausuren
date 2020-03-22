@@ -19,6 +19,7 @@ public class ResultsEndpoint extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	resp.addHeader("Content-Type", "text/csv");
+    	resp.addHeader("Content-Disposition", "attachment; filename=\"Klausur.csv\"");
 
         String test = req.getPathInfo().replace("/", "");
         Map<String, Submission[]> submissions = GLOBAL_VARS.database.getSubmissionsForTest(test);
