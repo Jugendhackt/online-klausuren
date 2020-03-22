@@ -3,6 +3,8 @@ package org.jugendhackt.online_klausuren;
 
 import com.google.gson.JsonObject;
 import java.time.Instant;
+
+import com.google.gson.annotations.SerializedName;
 import org.jugendhackt.online_klausuren.tasks.Submission;
 import org.jugendhackt.online_klausuren.tasks.Task;
 import org.jugendhackt.online_klausuren.web.WebSocket;
@@ -15,6 +17,7 @@ public class Test {
 
     private List<Student> students;
     private Task[] tasks;
+    @SerializedName("id")
     private final UUID uuid;
 
     public Test(UUID uuid, Task[] tasks) {

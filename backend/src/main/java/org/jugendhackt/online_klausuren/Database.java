@@ -104,6 +104,22 @@ public class Database {
         return null;
     }
 
+    public API_AUTH_ROLES getRoleForAPIAuthToken(String token) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT role FROM api_auth WHERE token=?");
+            statement.setString(1, token);
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()) {
+                return API_AUTH_ROLES.valueOf(resultSet.getString("role"));
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public HashMap<String, Submission[]> getSubmissionsForTest(String id) {
         try {
             PreparedStatement statement = connection.prepareStatement("SELECT data FROM taken_tests WHERE test=?");
