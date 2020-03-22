@@ -39,6 +39,8 @@ class _HomePageState extends State<HomePage> {
 
   String get baseUrl => '${useSSL ? 'https' : 'http'}://$host/api/v1';
 
+  bool isTeacher = false;
+
   Future<String> login(String username, String password) async {
     var res = await http.post('$baseUrl/auth',
         body: json.encode({
@@ -47,7 +49,9 @@ class _HomePageState extends State<HomePage> {
           'password': password,
         }));
     if (res.statusCode == 200) {
-      return json.decode(res.body)['token'];
+      var data = json.decode(res.body);
+      isTeacher = data['role'] == 'TEACHER';
+      return data['token'];
     } else {
       throw 'HTTP ${res.statusCode}: ${res.body}';
     }
@@ -81,7 +85,10 @@ class _HomePageState extends State<HomePage> {
       },
     );
     if (res.statusCode == 200) {
-      return json.decode(res.body).map<Test>((m) => Test.fromJson(m)).toList();
+      return json
+          .decode(utf8.decode(res.bodyBytes))
+          .map<Test>((m) => Test.fromJson(m))
+          .toList();
     } else {
       throw 'HTTP ${res.statusCode}: ${res.body}';
     }
@@ -179,6 +186,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Online Klausuren'),
+        actions: <Widget>[],
       ),
       body: tests == null
           ? _buildLoginPage()
@@ -267,22 +275,111 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           for (var test in tests)
             ListTile(
-              title: Text(test.id),
-              subtitle: Text(test.toJson().toString()),
-              onTap: () async {
-                /*  try { */
-                String token = await generateTestToken(test.id);
-                print(token);
-                setState(() {
-                  testToken = token;
-                });
-                connect();
-                /*  } catch (e) {
+              title: Text(
+                test.name ?? 'Klausur des Allgemeinwissens',
+              ),
+              // subtitle: Text(test.toJson().toString()),
+              trailing: isTeacher
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        IconButton(
+                            icon: Icon(Icons.table_chart),
+                            onPressed: () async {
+                              window.open(
+                                '$baseUrl/results/${test.id}',
+                                'Results',
+                              );
+                              /*  var res = await http.get('');
+
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('[Abgaben] ' +
+                                      (test.name ??
+                                          'Klausur des Allgemeinwissens')),
+                                  actions: <Widget>[
+                                    FlatButton(
+                                        onPressed: Navigator.of(context).pop,
+                                        child: Text('Ok'))
+                                  ],
+                                ),
+                              ); */
+                            }),
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(
+                                  test.name ?? 'Klausur des Allgemeinwissens',
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    for (var task in test.tasks) ...[
+                                      ListTile(
+                                        title: Text(task.title),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            if (task.description.isNotEmpty)
+                                              Text(task.description),
+                                            if (task is MultipleChoiceTask)
+                                              Wrap(
+                                                spacing: 4,
+                                                children: <Widget>[
+                                                  for (var choice
+                                                      in task.choices.values)
+                                                    Chip(label: Text(choice))
+                                                ],
+                                              )
+                                          ],
+                                        ),
+                                        trailing: Text(_printDuration(
+                                          Duration(
+                                            seconds: task.time,
+                                          ),
+                                        )),
+                                      ),
+                                      /*     Container(
+                                        height: 0.5,
+                                        color: Colors.grey,
+                                      ) */
+                                      //  if(task is TextTask)
+                                    ]
+                                  ],
+                                ),
+                                actions: <Widget>[
+                                  FlatButton(
+                                      onPressed: Navigator.of(context).pop,
+                                      child: Text('Ok'))
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    )
+                  : null,
+              onTap: isTeacher
+                  ? null
+                  : () async {
+                      /*  try { */
+                      String token = await generateTestToken(test.id);
+                      print(token);
+                      setState(() {
+                        testToken = token;
+                      });
+                      connect();
+                      /*  } catch (e) {
                   sState(() {
                     error = e.toString();
                   });
                 } */
-              },
+                    },
             ),
         ],
       );
@@ -451,6 +548,7 @@ class _HomePageState extends State<HomePage> {
             );
           },
           child: Text('Login'),
+          color: Colors.yellow,
         ),
       );
 
