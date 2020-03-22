@@ -19,6 +19,8 @@ import java.io.IOException;
 public class AuthEndpoint extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.addHeader("Access-Control-Allow-Origin", "*");
+
         BufferedReader reader = req.getReader();
         String line = reader.readLine();
         JsonObject object = GLOBAL_VARS.gson.fromJson(line, JsonObject.class);
