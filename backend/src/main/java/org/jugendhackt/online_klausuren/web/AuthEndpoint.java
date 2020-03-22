@@ -40,20 +40,24 @@ public class AuthEndpoint extends HttpServlet {
                 case "demo":
                     // WARNING: Demo Login is unsafe
                     name = object.get("username").getAsString();
-                    role = TEACHER;
+                    if (name.startsWith("l")) {
+                        role = TEACHER;
+                    } else {
+                        role = STUDENT;
+                    }
                     break;
                 default:
                     resp.getWriter().println("{\"error\": \"not implemented\"}");
             }
         }
 
-        String token = null;
         if (type.equals("test")) {
-            token = GLOBAL_VARS.database.addTestUser(name, object.get("test").getAsString());
+            String token = GLOBAL_VARS.database.addTestUser(name, object.get("test").getAsString());
+            resp.getWriter().println("{\"token\": \"" + token + "\"}");
         } else if (type.equals("api")) {
-            token = GLOBAL_VARS.database.addAPIUser(name, role);
+            String token = GLOBAL_VARS.database.addAPIUser(name, role);
+            resp.getWriter().println("{\"token\": \"" + token + "\", \"role\": \"" + role + "\"}");
         }
-        resp.getWriter().println("{\"token\": \"" + token + "\"}");
     }
 
     @Override
