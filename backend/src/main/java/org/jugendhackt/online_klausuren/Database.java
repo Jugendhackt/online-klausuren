@@ -48,7 +48,7 @@ public class Database {
     private void reloadTests() {
         try {
             Statement statement = connection.createStatement();
-            ResultSet tests = statement.executeQuery("SELECT id, tasks FROM tests WHERE archived = 0");
+            ResultSet tests = statement.executeQuery("SELECT id, tasks, name FROM tests WHERE archived = 0");
             while (tests.next()) {
                 JsonArray rawTasks = GLOBAL_VARS.gson.fromJson(tests.getString("tasks"), JsonArray.class);
                 Task[] tasks = new Task[rawTasks.size()];
@@ -64,7 +64,7 @@ public class Database {
                         tasks[i] = new TextTask(title, description, time, id);
                     }
                 }
-                GLOBAL_VARS.tests.add(new Test(UUID.fromString(tests.getString("id")), tasks));
+                GLOBAL_VARS.tests.add(new Test(UUID.fromString(tests.getString("id")), tests.getString("name") ,tasks));
             }
             tests.close();
             } catch (SQLException e) {

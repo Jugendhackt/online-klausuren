@@ -19,11 +19,13 @@ public class Test {
     private Task[] tasks;
     @SerializedName("id")
     private final UUID uuid;
+    private String name;
     
-    public Test(UUID uuid, Task[] tasks) {
+    public Test(UUID uuid, String name, Task[] tasks) {
         students = new ArrayList<>();
         this.tasks = tasks;
         this.uuid = uuid;
+        this.name = name;
     }
 
     public void addStudent(Session session, String name) {
@@ -94,5 +96,9 @@ public class Test {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public String getName() {
+        return name;
     }
 }
