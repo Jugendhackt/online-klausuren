@@ -20,6 +20,7 @@ public class Student {
     private final String name;
     private transient Task currentTask;
     private transient Task[] taskList;
+    private transient long current_deadline;
 
     public Student(Session session, String name, Task[] taskList) {
         this.session = session;
@@ -38,6 +39,16 @@ public class Student {
 
     public void setCurrentTask(Task currentTask) {
         this.currentTask = currentTask;
+    }
+    
+    public long getCurrent_Deadline()
+    {
+    	return current_deadline;
+    }
+    
+    public void setCurrent_Deadline(long current_deadline)
+    {
+    	this.current_deadline = current_deadline;
     }
 
     public void addSubmission(Submission submission) {
