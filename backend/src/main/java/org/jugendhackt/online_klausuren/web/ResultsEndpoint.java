@@ -18,20 +18,22 @@ import java.util.UUID;
 public class ResultsEndpoint extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    	resp.addHeader("Content-Type", "text/csv");
+
         String test = req.getPathInfo().replace("/", "");
         Map<String, Submission[]> submissions = GLOBAL_VARS.database.getSubmissionsForTest(test);
         if (submissions != null && !submissions.isEmpty()) {
         	
-        	resp.getWriter().print(";");
+        	resp.getWriter().print("Name;");
         	
         	Submission[] example = submissions.get(submissions.keySet().toArray()[0]);
-        	UUID[] uuid_order = new UUID[example.length];
+        	String[] uuid_order = new String[example.length];
         	for(int i=0; i<uuid_order.length; i++)
         	{
-        		uuid_order[i] = example[i].task;
+        		uuid_order[i] = example[i].task.toString();
         	}
-        	
-        	for(int i=0; i<submissions.size(); i++)
+
+        	for(int i=0; i<uuid_order.length; i++)
         	{
         		resp.getWriter().print( uuid_order[i] + ";");
         	}
@@ -39,17 +41,15 @@ public class ResultsEndpoint extends HttpServlet {
         	
             for (String name : submissions.keySet()) {
                 resp.getWriter().print(name + ";");
-                for(int i=0; i<submissions.size(); i++)
-                {
-	                for(Submission submission: submissions.get(name))
-		        	{
-	                	if(submission.task == uuid_order[i])
-	                	{
-	                		resp.getWriter().print(submission.value);
-	                		break;
-	                	}
-		        	}
-                }
+                String[] values = new String[uuid_order.length];
+				for(Submission submission: submissions.get(name)) {
+					for (int i=0; i < uuid_order.length; i++) {
+						if (submission.task.toString().equals(uuid_order[i])) values[i] = submission.value;
+					}
+				}
+                for (String value : values) {
+                	resp.getWriter().write(value + ";");
+				}
                 resp.getWriter().println(); 
             }
         }
