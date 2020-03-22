@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
     channel = HtmlWebSocketChannel.connect(
       window.location.protocol == 'https:'
           ? 'wss://${window.location.host}/api/v1/ws?token=$bearerToken'
-          : 'ws://${window.location.host}/api/v1/ws?token=$bearerToken',
+          : 'ws://${window.location.hostname}:8080/api/v1/ws?token=$bearerToken',
 // TODO Other authorization [low priority]
 /*    headers: {
         'Authorization': 'Bearer $bearerToken',
