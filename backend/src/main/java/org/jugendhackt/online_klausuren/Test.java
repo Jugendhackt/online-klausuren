@@ -40,7 +40,7 @@ public class Test {
             //z.B. WebSocket.sendMessage(session, "{\"error\": \"Task not valid\"}");
             return;
         }
-        if(student.getCurrent_Deadline() > Instant.now().getEpochSecond())
+        if(student.getCurrent_Deadline() < Instant.now().getEpochSecond())
         {
         	student.addSubmission(new Submission(task, ""));
         }else
@@ -69,7 +69,6 @@ public class Test {
         Task task = student.getCurrentTask();
         int time = task.time;
         long deadline = (long) time + Instant.now().getEpochSecond();
-        System.out.println("Deadline: " + deadline);
         student.setCurrent_Deadline(deadline);
         jsonObject.addProperty("deadline", deadline);
         WebSocket.sendMessage(student.getSession(), GLOBAL_VARS.gson.toJson(new WebsocketPacket("task", jsonObject)));
