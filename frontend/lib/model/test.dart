@@ -6,8 +6,15 @@ part 'test.g.dart';
 
 @JsonSerializable(nullable: false)
 class Test {
+  String id;
+
+  @JsonKey(nullable: true)
   int start;
 
+  @JsonKey(nullable: true)
+  String name;
+
+  @JsonKey(nullable: true)
   List<Task> tasks;
 
   Test();

@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:html';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:online_klausuren_app/model/multiple_choice_task.dart';
 import 'package:online_klausuren_app/model/submission.dart';
 import 'package:online_klausuren_app/model/task.dart';
+import 'package:online_klausuren_app/model/test.dart';
 import 'package:online_klausuren_app/model/text_task.dart';
 import 'package:web_socket_channel/html.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -23,18 +25,79 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String bearerToken;
+  String testToken;
+
+  String apiToken;
+
   WebSocketChannel channel;
+
+  String get host => window.location.protocol == 'https:'
+      ? '${window.location.host}'
+      : '${window.location.hostname}:8080';
+
+  bool get useSSL => window.location.protocol == 'https:';
+
+  String get baseUrl => '${useSSL ? 'https' : 'http'}://$host/api/v1';
+
+  Future<String> login(String username, String password) async {
+    var res = await http.post('$baseUrl/auth',
+        body: json.encode({
+          'type': 'api',
+          'username': username,
+          'password': password,
+        }));
+    if (res.statusCode == 200) {
+      return json.decode(res.body)['token'];
+    } else {
+      throw 'HTTP ${res.statusCode}: ${res.body}';
+    }
+  }
+
+  Future<String> generateTestToken(
+    String testId,
+  ) async {
+    var res = await http.post(
+      '$baseUrl/auth',
+      body: json.encode({
+        'type': 'test',
+        'test': testId,
+      }),
+      headers: {
+        'Authorization': 'Bearer $apiToken',
+      },
+    );
+    if (res.statusCode == 200) {
+      return json.decode(res.body)['token'];
+    } else {
+      throw 'HTTP ${res.statusCode}: ${res.body}';
+    }
+  }
+
+  Future<List<Test>> getTests() async {
+    var res = await http.get(
+      '$baseUrl/tests',
+      headers: {
+        'Authorization': 'Bearer $apiToken',
+      },
+    );
+    if (res.statusCode == 200) {
+      return json.decode(res.body).map<Test>((m) => Test.fromJson(m)).toList();
+    } else {
+      throw 'HTTP ${res.statusCode}: ${res.body}';
+    }
+  }
+
+  List<Test> tests;
+  _loadTests() async {
+    tests = await getTests();
+  }
 
   // Stellt die Verbindung zum Backend her
   connect() {
     if (channel != null) return;
 
     channel = HtmlWebSocketChannel.connect(
-      window.location.protocol == 'https:'
-          ? 'wss://${window.location.host}/api/v1/ws?token=$bearerToken'
-          : 'ws://${window.location.hostname}:8080/api/v1/ws?token=$bearerToken',
-// TODO Other authorization [low priority]
+      '${useSSL ? 'wss' : 'ws'}://$host/api/v1/ws?token=$testToken',
 /*    headers: {
         'Authorization': 'Bearer $bearerToken',
       }, */
@@ -117,14 +180,17 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Online Klausuren'),
       ),
-      body: bearerToken == null
+      body: tests == null
           ? _buildLoginPage()
           : ((currentTask == null || _testFinished)
-              ? Center(
-                  child: Text(_testFinished
-                      ? 'Dieser Test ist jetzt beendet. Vielen Dank für deine Teilnahme!'
-                      : 'Dein Token: $bearerToken. Warte auf Aufgaben...'),
-                )
+              ? (_testFinished
+                  ? Center(
+                      child: Text(/* _testFinished
+                      ? */
+                          'Dieser Test ist jetzt beendet. Vielen Dank für deine Teilnahme!'
+                          /*  : 'Dein Token: $testToken. Warte auf Aufgaben...' */),
+                    )
+                  : _buildTestSelection())
               : ListView(
                   padding: const EdgeInsets.all(8.0),
                   children: <Widget>[
@@ -197,6 +263,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildTestSelection() => ListView(
+        children: <Widget>[
+          for (var test in tests)
+            ListTile(
+              title: Text(test.id),
+              subtitle: Text(test.toJson().toString()),
+              onTap: () async {
+                /*  try { */
+                String token = await generateTestToken(test.id);
+                print(token);
+                setState(() {
+                  testToken = token;
+                });
+                connect();
+                /*  } catch (e) {
+                  sState(() {
+                    error = e.toString();
+                  });
+                } */
+              },
+            ),
+        ],
+      );
+
   sendSubmission() {
     _submitted = true;
     if (currentTask is MultipleChoiceTask) {
@@ -264,35 +354,99 @@ class _HomePageState extends State<HomePage> {
   Widget _buildLoginPage() => Center(
         child: RaisedButton(
           onPressed: () {
-            var ctrl = TextEditingController();
+            var usernameCtrl = TextEditingController();
+            var passwordCtrl = TextEditingController();
+            String error;
+
+            bool loginProcess = false;
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Dein Token?'),
-                content: TextField(
-                  controller: ctrl,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+              builder: (context) => StatefulBuilder(
+                builder: (context, sState) => AlertDialog(
+                  title: Text('Deine Anmeldedaten?'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      TextField(
+                        controller: usernameCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      TextField(
+                        controller: passwordCtrl,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      if (loginProcess) ...[
+                        SizedBox(
+                          height: 8,
+                        ),
+                        ListTile(
+                          leading: CircularProgressIndicator(),
+                          title: Text('Du wirst angemeldet...'),
+                        ),
+                      ],
+                      if (error != null) ...[
+                        SizedBox(
+                          height: 8,
+                        ),
+                        ListTile(
+                          title: Text(
+                            error,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  actions: <Widget>[
+                    FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Abbrechen'),
+                    ),
+                    FlatButton(
+                      onPressed: () async {
+                        sState(() {
+                          loginProcess = true;
+                        });
+                        try {
+                          String token =
+                              await login(usernameCtrl.text, passwordCtrl.text);
+                          print(token);
+                          apiToken = token;
+                          await _loadTests();
+                          Navigator.of(context).pop();
+                          setState(() {});
+                          _loadTests();
+                        } catch (e) {
+                          sState(() {
+                            error = e.toString();
+                          });
+                        }
+                        // await Future.delayed(Duration(seconds: 10));
+                        //Navigator.of(context).pop();
+                        /*    setState(() {
+                          testToken = usernameCtrl.text;
+                        });
+                        connect(); */
+                      },
+                      child: Text('Login'),
+                    ),
+                  ],
                 ),
-                actions: <Widget>[
-                  FlatButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Abbrechen'),
-                  ),
-                  FlatButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      setState(() {
-                        bearerToken = ctrl.text;
-                      });
-                      connect();
-                    },
-                    child: Text('Login'),
-                  ),
-                ],
               ),
             );
           },
