@@ -1,6 +1,5 @@
 import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
+import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:online_klausuren_app/model/multiple_choice_task.dart';
 import 'package:online_klausuren_app/model/submission.dart';
@@ -32,9 +31,9 @@ class _HomePageState extends State<HomePage> {
     if (channel != null) return;
 
     channel = HtmlWebSocketChannel.connect(
-      kReleaseMode
-          ? 'wss://lisky.app/api/v1/ws?token=$bearerToken'
-          : 'ws://localhost:8080/api/v1/ws?token=$bearerToken',
+      window.location.protocol == 'https:'
+          ? 'wss://${window.location.host}/api/v1/ws?token=$bearerToken'
+          : 'ws://${window.location.host}/api/v1/ws?token=$bearerToken',
 // TODO Other authorization [low priority]
 /*    headers: {
         'Authorization': 'Bearer $bearerToken',
@@ -70,13 +69,8 @@ class _HomePageState extends State<HomePage> {
     if (function == 'task') {
       var task = data['task'];
 
-      if (task['type'] == 'TEXT') {
-        currentTask = TextTask.fromJson(task);
-      } else if (task['type'] == 'CHOICES') {
-        currentTask = MultipleChoiceTask.fromJson(task);
-      } else {
-        // Sollte nicht passieren :D
-      }
+      currentTask = Task.fromJson(task);
+
       deadline = DateTime.fromMillisecondsSinceEpoch(data['deadline'] * 1000);
 
       _selectedChoice = null;
