@@ -19,7 +19,7 @@ public class Test {
     private Task[] tasks;
     @SerializedName("id")
     private final UUID uuid;
-
+    
     public Test(UUID uuid, Task[] tasks) {
         students = new ArrayList<>();
         this.tasks = tasks;
@@ -40,7 +40,14 @@ public class Test {
             //z.B. WebSocket.sendMessage(session, "{\"error\": \"Task not valid\"}");
             return;
         }
-        student.addSubmission(new Submission(task, submission));
+        if(student.getCurrent_Deadline() > Instant.now().getEpochSecond())
+        {
+        	student.addSubmission(new Submission(task, ""));
+        }else
+        {
+        	student.addSubmission(new Submission(task, submission));
+        }
+        
         Task nextTask = getNextTaskForStudent(student);
         if (nextTask != null) {
             student.setCurrentTask(nextTask);
@@ -63,6 +70,7 @@ public class Test {
         int time = task.time;
         long deadline = (long) time + Instant.now().getEpochSecond();
         System.out.println("Deadline: " + deadline);
+        student.setCurrent_Deadline(deadline);
         jsonObject.addProperty("deadline", deadline);
         WebSocket.sendMessage(student.getSession(), GLOBAL_VARS.gson.toJson(new WebsocketPacket("task", jsonObject)));
         
