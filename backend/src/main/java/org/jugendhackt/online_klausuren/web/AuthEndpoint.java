@@ -1,7 +1,11 @@
 package org.jugendhackt.online_klausuren.web;
 
+import static org.jugendhackt.online_klausuren.Database.API_AUTH_ROLES;
+
 import com.google.gson.JsonObject;
 import org.jugendhackt.online_klausuren.GLOBAL_VARS;
+
+import static org.jugendhackt.online_klausuren.Database.API_AUTH_ROLES.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,15 +22,27 @@ public class AuthEndpoint extends HttpServlet {
         BufferedReader reader = req.getReader();
         String line = reader.readLine();
         JsonObject object = GLOBAL_VARS.gson.fromJson(line, JsonObject.class);
-        switch (object.get("type").getAsString()) {
+        String type = object.get("type").getAsString();
+
+        String name = "";
+        API_AUTH_ROLES role = STUDENT;
+
+        // Choose Auth Provider. They cancel the request if it is not allowed and set the name
+        switch (System.getenv("OK_AUTH_PROVIDER")) {
             case "demo":
-                // Demo Login is unsafe and needs to be allowed specifically
-                if (System.getenv("OK_ALLOW_DEMO_LOGIN").equals("TRUE")) {
-                    resp.getWriter().println("{\"token\": \"" + GLOBAL_VARS.database.addUser(object.get("username").getAsString(), object.get("test").getAsString()) + "\"}");
-                }
+                // WARNING: Demo Login is unsafe
+                name = object.get("username").getAsString();
+                role = TEACHER;
                 break;
             default:
-                resp.getWriter().println("{\"error\": \"not implemented, yet\"}");
+                resp.getWriter().println("{\"error\": \"not implemented\"}");
         }
+        String token = null;
+        if (type.equals("test")) {
+            token = GLOBAL_VARS.database.addTestUser(name, object.get("test").getAsString());
+        } else if (type.equals("api")) {
+            token = GLOBAL_VARS.database.addAPIUser(name, role);
+        }
+        resp.getWriter().println("{\"token\": \"" + token + "\"}");
     }
 }

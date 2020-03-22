@@ -20,6 +20,11 @@ public class Database {
 
     private Connection connection;
 
+    public enum API_AUTH_ROLES {
+        TEACHER,
+        STUDENT;
+    }
+
     public Database() {
         try {
             File file = new File("data.db");
@@ -34,7 +39,8 @@ public class Database {
 
     private void createSchemes() throws SQLException {
         Statement statement = connection.createStatement();
-        statement.execute("CREATE TABLE IF NOT EXISTS auth (token VARCHAR(30) PRIMARY KEY, test VARCHAR(36), name VARCHAR(10))");
+        statement.execute("CREATE TABLE IF NOT EXISTS test_auth (token VARCHAR(30) PRIMARY KEY, test VARCHAR(36), name VARCHAR(20))");
+        statement.execute("CREATE TABLE IF NOT EXISTS api_auth (token VARCHAR(30) PRIMARY KEY, role VARCHAR(7), name VARCHAR(20), expire INTEGER)");
         statement.execute("CREATE TABLE IF NOT EXISTS taken_tests (data TEXT, test VARCHAR(36))");
         statement.execute("CREATE TABLE IF NOT EXISTS tests (id VARCHAR(36) PRIMARY KEY, tasks TEXT, archived INTEGER DEFAULT 0)");
     }
@@ -81,7 +87,7 @@ public class Database {
 
     public Test getTestForAuthToken(String token, String[] extras) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT test, name FROM auth WHERE token=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT test, name FROM test_auth WHERE token=?");
             statement.setString(1, token);
             ResultSet resultSet = statement.executeQuery();
             if (extras != null && extras.length > 0) {
@@ -116,13 +122,10 @@ public class Database {
     }
 
 
-    public String addUser(String name, String testId) {
+    public String addTestUser(String name, String testId) {
         try {
-            String chrs = "0123456789abcdefghijklmnopqrstuvwxyz-_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
-            String token = secureRandom.ints(25, 0, chrs.length()).mapToObj(i -> chrs.charAt(i))
-                    .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO auth (token, test, name) VALUES (?, ?, ?)");
+            String token = createRandomTokenString();
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO test_auth (token, test, name) VALUES (?, ?, ?)");
             statement.setString(1, token);
             statement.setString(2, testId);
             statement.setString(3, name);
@@ -132,6 +135,30 @@ public class Database {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public String addAPIUser(String name, API_AUTH_ROLES role) {
+        try {
+            String token = createRandomTokenString();
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO api_auth (token, role, name, expire) VALUES (?, ?, ?, ?)");
+            statement.setString(1, token);
+            statement.setString(2, role.toString());
+            statement.setString(3, name);
+            statement.setLong(4, (System.currentTimeMillis() / 1000) + (60 * 60 * 24));
+            statement.execute();
+            return token;
+        } catch (NoSuchAlgorithmException | SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String createRandomTokenString() throws NoSuchAlgorithmException {
+        String chrs = "0123456789abcdefghijklmnopqrstuvwxyz-_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+        String token = secureRandom.ints(25, 0, chrs.length()).mapToObj(i -> chrs.charAt(i))
+                .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+        return token;
     }
 
 }
